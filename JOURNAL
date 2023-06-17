@@ -1,0 +1,137 @@
+import csv
+from datetime import datetime
+import matplotlib.pyplot as plt
+
+def add_trade(symbol, action, quantity, price, date):
+    with open('trades.csv', 'a') as file:
+        writer = csv.writer(file)
+        writer.writerow([symbol, action, quantity, price, date])
+
+def view_trades():
+    with open('trades.csv', 'r') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            print(row)
+
+def calculate_profit_loss():
+    total_profit_loss = 0
+    with open('trades.csv', 'r') as file:
+        reader = csv.reader(file)
+        next(reader)  # Skip header row
+        for row in reader:
+            action = row[1]
+            quantity = int(row[2])
+            price = float(row[3])
+            if action.lower() == 'buy':
+                total_profit_loss -= quantity * price
+            elif action.lower() == 'sell':
+                total_profit_loss += quantity * price
+    return total_profit_loss
+
+def calculate_win_rate():
+    total_trades = 0
+    winning_trades = 0
+    with open('trades.csv', 'r') as file:
+        reader = csv.reader(file)
+        next(reader)  # Skip header row
+        for row in reader:
+            total_trades += 1
+            action = row[1]
+            if action.lower() == 'sell':
+                winning_trades += 1
+    if total_trades == 0:
+        return 0
+    else:
+        return (winning_trades / total_trades) * 100
+
+def calculate_average_profit_per_trade():
+    total_profit = calculate_profit_loss()
+    total_trades = 0
+    with open('trades.csv', 'r') as file:
+        reader = csv.reader(file)
+        next(reader)  # Skip header row
+        for row in reader:
+            total_trades += 1
+    if total_trades == 0:
+        return 0
+    else:
+        return total_profit / total_trades
+
+def plot_profit_loss():
+    dates = []
+    profit_loss = []
+    cumulative_profit_loss = 0
+    with open('trades.csv', 'r') as file:
+        reader = csv.reader(file)
+        next(reader)  # Skip header row
+        for row in reader:
+            dates.append(datetime.strptime(row[4], "%Y-%m-%d %H:%M:%S"))
+            action = row[1]
+            quantity = int(row[2])
+            price = float(row[3])
+            if action.lower() == 'buy':
+                cumulative_profit_loss -= quantity * price
+            elif action.lower() == 'sell':
+                cumulative_profit_loss += quantity * price
+            profit_loss.append(cumulative_profit_loss)
+    
+    plt.plot(dates, profit_loss)
+    plt.xlabel("Date")
+    plt.ylabel("Profit/Loss")
+    plt.title("Profit/Loss Over Time")
+    plt.show()
+
+def main_menu():
+    print("=== Advanced Trading Journal ===")
+    print("1. Add Trade")
+    print("2. View Trades")
+    print("3. Calculate Profit/Loss")
+    print("4. Calculate Win Rate")
+    print("5. Calculate Average Profit per Trade")
+    print("6. Plot Profit/Loss Over Time")
+    print("7. Exit")
+
+    choice = input("Enter your choice: ")
+
+    if choice == '1':
+        symbol = input("Enter symbol: ")
+        action = input("Enter action (Buy/Sell): ")
+        quantity = int(input("Enter quantity: "))
+        price = float(input("Enter price: "))
+        date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        add_trade(symbol, action, quantity, price, date)
+        print("Trade added successfully!")
+        print()
+        main_menu()
+    elif choice == '2':
+        print("=== Trades ===")
+        view_trades()
+        print()
+        main_menu()
+    elif choice == '3':
+        profit_loss = calculate_profit_loss()
+        print("Total Profit/Loss: $", profit_loss)
+        print()
+        main_menu()
+    elif choice == '4':
+        win_rate = calculate_win_rate()
+        print("Win Rate: ", win_rate, "%")
+        print()
+        main_menu()
+    elif choice == '5':
+        avg_profit_per_trade = calculate_average_profit_per_trade()
+        print("Average Profit per Trade: $", avg_profit_per_trade)
+        print()
+        main_menu()
+    elif choice == '6':
+        plot_profit_loss()
+        main_menu()
+    elif choice == '7':
+        print("Exiting...")
+    else:
+        print("Invalid choice. Please try again.")
+        print()
+        main_menu()
+
+if __name__ == "__main__":
+    main_menu()
